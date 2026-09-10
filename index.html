@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>konkursiki</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Kalendarz</p>
+          <h1>konkursiki</h1>
+        </div>
+        <div class="topbar-actions">
+          <button id="profileToggleBtn" class="profile-btn" type="button" aria-label="Zmień profil">
+            <span class="profile-avatar">P</span>
+            <span id="profileName">Paula</span>
+          </button>
+          <span id="realtimeStatus" class="realtime-status" aria-live="polite">lokalnie</span>
+          <button id="historyToggleBtn" class="icon-btn history-btn" type="button" aria-label="Otwórz historię" title="Otwórz historię">🗓️</button>
+          <span id="todayLabel" class="today-pill"></span>
+          <button id="addContestBtn" class="primary-btn" type="button">+ Dodaj konkurs</button>
+        </div>
+      </header>
+
+      <main>
+        <div id="boardView" class="board-view">
+          <div class="board" aria-label="Tablica konkursów">
+            <section class="board-column todo-column" aria-labelledby="todo-title">
+              <div class="column-header">
+                <h2 id="todo-title">To do</h2>
+                <span class="count" id="todoCount">0</span>
+              </div>
+              <div id="todoList" class="card-list"></div>
+            </section>
+
+            <section class="board-column ongoing-column" aria-labelledby="ongoing-title">
+              <div class="column-header">
+                <h2 id="ongoing-title">W trakcie</h2>
+                <span class="count" id="ongoingCount">0</span>
+              </div>
+              <div id="ongoingList" class="card-list"></div>
+            </section>
+
+            <section class="board-column pending-column" aria-labelledby="pending-title">
+              <div class="column-header">
+                <h2 id="pending-title">Oczekujące</h2>
+                <span class="count" id="pendingCount">0</span>
+              </div>
+              <div id="pendingList" class="card-list"></div>
+            </section>
+
+            <section class="board-column results-column" aria-labelledby="results-title">
+              <div class="column-header">
+                <h2 id="results-title">Wyniki</h2>
+                <span class="count" id="resultsCount">0</span>
+              </div>
+              <div id="resultsList" class="card-list"></div>
+            </section>
+          </div>
+        </div>
+
+        <section id="historyView" class="history-view hidden" aria-label="Historia konkursów">
+          <div class="history-header">
+            <h2>Historia</h2>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="profileModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-profile="true"></div>
+      <div class="modal-dialog profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Twój dostęp</p>
+            <h3 id="profileModalTitle">Wybierz profil</h3>
+          </div>
+          <button class="icon-btn" type="button" data-close-profile="true" aria-label="Zamknij">✕</button>
+        </div>
+
+        <p class="profile-intro">Każdy profil ma własne konkursy i zadania.</p>
+
+        <form id="profileForm">
+          <label>
+            <span>Profil</span>
+            <select id="profileSelect" required></select>
+          </label>
+
+          <label id="newProfileWrap" class="hidden">
+            <span>Nazwa nowego profilu</span>
+            <input id="newProfileName" type="text" placeholder="np. Ania" />
+          </label>
+
+          <div class="modal-actions">
+            <button id="deleteProfileBtn" class="danger-btn" type="button">Usuń profil</button>
+            <div class="actions-right">
+              <button class="secondary-btn" type="button" data-close-profile="true">Anuluj</button>
+              <button class="primary-btn" type="submit">Wejdź</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="contestModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close="true"></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+          <h3 id="modalTitle">Dodaj konkurs</h3>
+          <button class="icon-btn" type="button" data-close="true" aria-label="Zamknij">✕</button>
+        </div>
+
+        <form id="contestForm">
+          <input type="hidden" id="contestId" />
+
+          <label>
+            <span>Nazwa konkursu</span>
+            <input id="contestTitle" name="title" type="text" placeholder="np. Festiwal talentów" required />
+          </label>
+
+          <label>
+            <span>Opis / szczegóły</span>
+            <textarea id="contestDescription" name="description" rows="4" placeholder="Dodatkowe informacje o konkursie"></textarea>
+          </label>
+
+          <div class="field-row">
+            <label>
+              <span>Sesja</span>
+              <select id="contestStatus" name="status">
+                <option value="ongoing">W trakcie</option>
+                <option value="pending">Oczekujące</option>
+                <option value="results">Wyniki</option>
+              </select>
+            </label>
+
+            <label>
+              <span>Data wyników</span>
+              <input id="resultDate" name="resultDate" type="date" />
+            </label>
+          </div>
+
+          <label class="checkbox-row">
+            <input id="todoCheckbox" type="checkbox" />
+            <span>Dodaj do sekcji To do</span>
+          </label>
+
+          <label id="todoFieldWrap" class="hidden">
+            <span>To do / zadanie</span>
+            <input id="todoText" name="todoText" type="text" placeholder="np. kupić 2 snickersy w Żabce" />
+          </label>
+
+          <div class="modal-actions">
+            <button id="deleteContestBtn" class="danger-btn hidden" type="button">Usuń</button>
+            <div class="actions-right">
+              <button class="secondary-btn" type="button" data-close="true">Anuluj</button>
+              <button class="primary-btn" type="submit">Zapisz</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="resultModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-result="true"></div>
+      <div class="modal-dialog result-dialog" role="dialog" aria-modal="true" aria-labelledby="resultModalTitle">
+        <div class="modal-header">
+          <h3 id="resultModalTitle">Wynik konkursu</h3>
+          <button class="icon-btn" type="button" data-close-result="true" aria-label="Zamknij">✕</button>
+        </div>
+
+        <p id="resultContestName" class="result-summary"></p>
+
+        <div class="result-choice-row">
+          <button class="result-choice-btn win-btn" type="button" data-result-choice="win">Wygrana</button>
+          <button class="result-choice-btn lose-btn" type="button" data-result-choice="lose">Nie</button>
+        </div>
+
+        <div id="resultNoteWrap" class="hidden">
+          <label>
+            <span>Co wygrałaś?</span>
+            <input id="resultNoteInput" type="text" placeholder="np. voucher 200 zł" />
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <div class="actions-right">
+            <button class="secondary-btn" type="button" data-close-result="true">Anuluj</button>
+            <button id="saveResultBtn" class="primary-btn" type="button">Zapisz</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
