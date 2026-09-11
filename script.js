@@ -2,6 +2,14 @@ const STORAGE_KEY = 'contest-tracker-state-v1';
 const PROFILES_KEY = 'contest-tracker-profiles-v1';
 const ACTIVE_PROFILE_KEY = 'contest-tracker-active-profile-v1';
 const savedActiveProfileId = localStorage.getItem(ACTIVE_PROFILE_KEY);
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyAzk4n3tSSsoRRb8WNkTFGtqhbNwmj6NXk',
+  authDomain: 'konkursiki.firebaseapp.com',
+  projectId: 'konkursiki',
+  storageBucket: 'konkursiki.firebasestorage.app',
+  messagingSenderId: '22692945288',
+  appId: '1:22692945288:web:be7d4c46de7ab676dc6e3d',
+};
 
 const STATUS = {
   ONGOING: 'ongoing',
@@ -19,6 +27,8 @@ const state = {
 };
 
 let realtimeSource = null;
+let firestore = null;
+let unsubscribeFirestore = null;
 
 if (!state.activeProfileId || !state.profiles.some((profile) => profile.id === state.activeProfileId)) {
   state.activeProfileId = state.profiles[0].id;
@@ -104,6 +114,15 @@ function setRealtimeStatus(text, connected) {
 }
 
 async function syncProfilesToServer() {
+  if (firestore) {
+    try {
+      await firestore.collection('appState').doc('profiles').set({ profiles: state.profiles, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      return;
+    } catch (error) {
+      setRealtimeStatus('lokalnie', false);
+    }
+  }
+
   try {
     await fetch('/api/profiles', {
       method: 'PUT',
@@ -130,6 +149,31 @@ function applyRemoteProfiles(profiles) {
 }
 
 async function connectRealtime() {
+  if (window.firebase) {
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      firestore = firebase.firestore();
+      const snapshot = await firestore.collection('appState').doc('profiles').get();
+      const remotePayload = snapshot.exists ? snapshot.data() : null;
+
+      if (remotePayload && Array.isArray(remotePayload.profiles) && remotePayload.profiles.length) {
+        applyRemoteProfiles(remotePayload.profiles);
+      } else if (state.profiles.length) {
+        await syncProfilesToServer();
+      }
+
+      unsubscribeFirestore = firestore.collection('appState').doc('profiles').onSnapshot((cloudSnapshot) => {
+        const payload = cloudSnapshot.exists ? cloudSnapshot.data() : null;
+        if (payload && Array.isArray(payload.profiles)) applyRemoteProfiles(payload.profiles);
+      });
+      setRealtimeStatus('na żywo', true);
+      return;
+    } catch (error) {
+      console.error('Firebase nie jest dostępny:', error);
+      firestore = null;
+    }
+  }
+
   try {
     const response = await fetch('/api/profiles');
     if (!response.ok) throw new Error('Serwer synchronizacji jest niedostępny.');
